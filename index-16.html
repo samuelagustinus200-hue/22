@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>TeamChat v2</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c3aed'/%3E%3Cstop offset='100%25' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='110' fill='url(%23bg)'/%3E%3Ctext x='256' y='256' font-size='330' font-family='Georgia,serif' font-weight='900' fill='white' text-anchor='middle' dominant-baseline='middle'%3E💬%3C/text%3E%3C/svg%3E"/>
+    <meta name="theme-color" content="#7c3aed"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #020617 0%, #1a1f35 100%);
+            color: #f1f5f9;
+            overflow: hidden;
+        }
+
+        :root {
+            --primary: #7c3aed;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #475569;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        /* ─────────────────────────────────────
+           AUTH SCREEN
+           ───────────────────────────────────── */
+        .auth-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #020617 0%, #1a1f35 100%);
+        }
+
+        .auth-container {
+            width: 90%;
+            max-width: 420px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-logo-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .auth-logo-title {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .auth-form-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(124, 58, 237, 0.1);
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.2);
+        }
+
+        .auth-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .auth-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+
+        .auth-toggle-btn:hover {
+            color: var(--secondary);
+        }
+
+        .error-message {
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            border-radius: 6px;
+            color: var(--error);
+            font-size: 12px;
+            text-align: center;
+            display: none;
+        }
+
+        /* ─────────────────────────────────────
+           CHAT SCREEN
+           ───────────────────────────────────── */
+        .chat-screen {
+            display: none;
+            height: 100vh;
+            grid-template-columns: 280px 1fr 300px;
+            gap: 0;
+            background: var(--bg-darker);
+        }
+
+        .chat-screen.show {
+            display: grid;
+        }
+
+        /* Sidebar Left */
+        .sidebar-left {
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sidebar-right {
+            background: var(--bg-dark);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .main-content {
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        .header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-profile {
+            padding: 12px;
+            background: rgba(124, 58, 237, 0.1);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            padding: 6px 10px;
+            background: var(--error);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: 12px 16px 8px;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-action {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .section-action:hover {
+            color: var(--secondary);
+        }
+
+        .channel-list {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .channel-btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+        }
+
+        .channel-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .channel-btn.active {
+            background: rgba(124, 58, 237, 0.2);
+            color: var(--text-primary);
+            border-left-color: var(--primary);
+        }
+
+        .chat-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+            flex-shrink: 0;
+        }
+
+        .channel-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .channel-icon {
+            font-size: 24px;
+        }
+
+        .channel-name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .channel-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .message-group {
+            display: flex;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .msg-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .msg-avatar:hover {
+            opacity: 0.8;
+        }
+
+        .msg-content {
+            flex: 1;
+        }
+
+        .msg-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .msg-sender {
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .msg-sender:hover {
+            color: var(--primary);
+        }
+
+        .msg-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .msg-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            word-wrap: break-word;
+            transition: all 0.2s;
+        }
+
+        .msg-bubble:hover {
+            border-color: var(--primary);
+        }
+
+        .msg-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .msg-reactions {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .reaction {
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .reaction:hover {
+            background: rgba(124, 58, 237, 0.3);
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .input-area {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.02) 0%, rgba(236, 72, 153, 0.02) 100%);
+            flex-shrink: 0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+        }
+
+        .msg-input {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            resize: none;
+            max-height: 100px;
+            transition: all 0.2s;
+        }
+
+        .msg-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.2);
+        }
+
+        .msg-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Members */
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .member-item {
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .member-item:hover {
+            background: var(--bg-card);
+            border-color: var(--primary);
+        }
+
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .member-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .member-name {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+            background: var(--success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-dot.offline {
+            background: var(--text-secondary);
+            box-shadow: none;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .modal-btn:hover:not(:disabled) {
+            background: #6d28d9;
+        }
+
+        .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-btn.secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--bg-card);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .chat-screen {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-left {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar-left.show {
+                transform: translateX(0);
+            }
+
+            .sidebar-right {
+                position: fixed;
+                right: 0;
+                top: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar-right.show {
+                transform: translateX(0);
+            }
+
+            #toggleSidebarBtn,
+            #toggleRightBtn {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+    <div class="auth-container">
+        <div class="auth-logo">
+            <div class="auth-logo-icon">💬</div>
+            <div class="auth-logo-title">TeamChat v2</div>
+        </div>
+
+        <div id="loginForm" class="auth-form">
+            <div class="auth-form-title">Firebase Login</div>
+            <div id="loginError" class="error-message"></div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="loginEmail" class="form-input" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="loginPassword" class="form-input" placeholder="••••••••">
+            </div>
+            <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Login</button>
+            <div class="auth-toggle">
+                No account? <button class="auth-toggle-btn" onclick="switchToRegister()">Sign Up</button>
+            </div>
+        </div>
+
+        <div id="registerForm" class="auth-form" style="display: none;">
+            <div class="auth-form-title">Firebase Sign Up</div>
+            <div id="registerError" class="error-message"></div>
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="registerName" class="form-input" placeholder="Your Name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="registerEmail" class="form-input" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="registerPassword" class="form-input" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" id="registerConfirm" class="form-input" placeholder="••••••••">
+            </div>
+            <button class="auth-btn" id="registerBtn" onclick="handleRegister()">Sign Up</button>
+            <div class="auth-toggle">
+                Have account? <button class="auth-toggle-btn" onclick="switchToLogin()">Login</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div class="chat-screen" id="chatScreen">
+    <!-- Sidebar Left -->
+    <div class="sidebar-left" id="sidebar">
+        <div class="header">
+            <div class="logo">
+                <span>💬</span>
+                <span>TeamChat</span>
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">🎨</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-status">Online</div>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">Exit</button>
+            </div>
+        </div>
+
+        <div class="section-title">
+            CHANNELS
+            <button class="section-action" onclick="showChannelModal()">+</button>
+        </div>
+        <div class="channel-list" id="channelList"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                <button style="display: none; background: none; border: none; color: white; font-size: 20px; cursor: pointer;" id="toggleSidebarBtn" onclick="toggleSidebar()">☰</button>
+                <div class="channel-info">
+                    <div class="channel-icon" id="channelIcon">📢</div>
+                    <div>
+                        <div class="channel-name" id="channelName">Umum</div>
+                        <div class="channel-desc" id="channelDesc">General discussion</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-actions">
+                <button class="icon-btn" title="Info" onclick="showInfoModal()">ℹ️</button>
+                <button style="display: none;" class="icon-btn" id="toggleRightBtn" title="Members" onclick="toggleRightSidebar()">👥</button>
+            </div>
+        </div>
+
+        <div class="messages-container" id="messagesContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">💬</div>
+                <div>Connecting to Firebase...</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <textarea id="messageInput" class="msg-input" placeholder="Type message..." rows="1" disabled></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Right -->
+    <div class="sidebar-right" id="sidebar-right">
+        <div class="section-title">👥 Team Members</div>
+        <div class="members-list" id="membersList"></div>
+    </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="channelModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">➕ New Channel</div>
+            <button class="modal-close" onclick="closeModal('channelModal')">×</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Channel Name</label>
+            <input type="text" id="channelName" class="form-input" placeholder="e.g., marketing">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" id="channelDesc" class="form-input" placeholder="Channel description">
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn secondary" onclick="closeModal('channelModal')">Cancel</button>
+            <button class="modal-btn" id="createBtn" onclick="createChannel()">Create</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="infoModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">ℹ️ Channel Info</div>
+            <button class="modal-close" onclick="closeModal('infoModal')">×</button>
+        </div>
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span style="color: var(--text-secondary);">Channel Name</span>
+                <strong id="infoName">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span style="color: var(--text-secondary);">Members</span>
+                <strong id="infoMembers">0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Messages</span>
+                <strong id="infoMessages">0</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// FIREBASE CONFIG
+// ============================================
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC9ey32b6vC66Ch3BLF2C3JvSMmv0p0KJU",
+    authDomain: "teamchat-perusahaan-saya.firebaseapp.com",
+    projectId: "teamchat-perusahaan-saya",
+    storageBucket: "teamchat-perusahaan-saya.firebasestorage.app",
+    messagingSenderId: "593346653209",
+    appId: "1:593346653209:web:ae0cf6e865ac431bfc0e88",
+    databaseURL: "https://teamchat-perusahaan-saya-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+console.log("✅ Firebase initialized successfully!");
+
+// ============================================
+// GLOBAL STATE
+// ============================================
+
+let currentUser = null;
+let currentChannel = null;
+let channels = [];
+let members = {};
+
+// ============================================
+// AUTH HANDLERS
+// ============================================
+
+function switchToRegister() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'flex';
+}
+
+function switchToLogin() {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'flex';
+}
+
+function showError(el, msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    if (!email || !password) {
+        showError(errorEl, 'Email and password required');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            errorEl.style.display = 'none';
+        })
+        .catch(error => {
+            showError(errorEl, error.message);
+            btn.disabled = false;
+            btn.textContent = 'Login';
+        });
+}
+
+function handleRegister() {
+    const name = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirm = document.getElementById('registerConfirm').value;
+    const errorEl = document.getElementById('registerError');
+    const btn = document.getElementById('registerBtn');
+
+    if (!name || !email || !password || !confirm) {
+        showError(errorEl, 'All fields required');
+        return;
+    }
+
+    if (password !== confirm) {
+        showError(errorEl, 'Passwords do not match');
+        return;
+    }
+
+    if (password.length < 6) {
+        showError(errorEl, 'Password must be 6+ characters');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+            const avatars = ['🎨', '💻', '🚀', '🎯', '📊', '✨', '🔥', '🌸'];
+            const avatar = avatars[Math.floor(Math.random() * avatars.length)];
+
+            return userCredential.user.updateProfile({
+                displayName: name
+            }).then(() => {
+                return db.ref('users/' + userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    avatar: avatar,
+                    createdAt: new Date().toISOString(),
+                    status: 'online'
+                });
+            });
+        })
+        .then(() => {
+            document.getElementById('registerName').value = '';
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerPassword').value = '';
+            document.getElementById('registerConfirm').value = '';
+            errorEl.style.display = 'none';
+            switchToLogin();
+        })
+        .catch(error => {
+            showError(errorEl, error.message);
+            btn.disabled = false;
+            btn.textContent = 'Sign Up';
+        });
+}
+
+function handleLogout() {
+    if (confirm('Sure want to logout?')) {
+        auth.signOut();
+    }
+}
+
+// ============================================
+// AUTH STATE
+// ============================================
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || user.email.split('@')[0]
+        };
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('chatScreen').classList.add('show');
+        document.getElementById('userName').textContent = currentUser.displayName;
+        initChat();
+    } else {
+        document.getElementById('authScreen').style.display = 'flex';
+        document.getElementById('chatScreen').classList.remove('show');
+    }
+});
+
+// ============================================
+// CHAT LOGIC
+// ============================================
+
+function initChat() {
+    loadChannels();
+    loadMembers();
+    setupEventListeners();
+    setupResponsive();
+}
+
+function loadChannels() {
+    db.ref('channels').on('value', snapshot => {
+        channels = [];
+        snapshot.forEach(childSnapshot => {
+            channels.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
+        renderChannels();
+        if (!currentChannel && channels.length > 0) {
+            selectChannel(channels[0].id);
+        }
+    }, error => {
+        console.error('Error loading channels:', error);
+    });
+}
+
+function loadMembers() {
+    db.ref('users').on('value', snapshot => {
+        members = {};
+        snapshot.forEach(childSnapshot => {
+            members[childSnapshot.key] = {
+                uid: childSnapshot.key,
+                ...childSnapshot.val()
+            };
+        });
+        renderMembers();
+    }, error => {
+        console.error('Error loading members:', error);
+    });
+}
+
+function renderChannels() {
+    const list = document.getElementById('channelList');
+    list.innerHTML = channels.map(ch => `
+        <button class="channel-btn ${currentChannel && currentChannel.id === ch.id ? 'active' : ''}" onclick="selectChannel('${ch.id}')">
+            <span>${ch.icon || '📢'}</span>
+            <span>#${ch.name}</span>
+        </button>
+    `).join('');
+}
+
+function selectChannel(channelId) {
+    currentChannel = channels.find(c => c.id === channelId);
+    if (!currentChannel) return;
+
+    document.getElementById('channelName').textContent = currentChannel.name;
+    document.getElementById('channelDesc').textContent = currentChannel.description || '';
+    document.getElementById('channelIcon').textContent = currentChannel.icon || '📢';
+    renderChannels();
+
+    const messagesRef = db.ref(`channels/${channelId}/messages`).orderByChild('timestamp');
+    messagesRef.on('value', snapshot => {
+        const messages = [];
+        snapshot.forEach(childSnapshot => {
+            messages.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
+        renderMessages(messages);
+        scrollToBottom();
+    }, error => {
+        console.error('Error loading messages:', error);
+    });
+
+    closeSidebars();
+    document.getElementById('messageInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+}
+
+function renderMessages(messages) {
+    const container = document.getElementById('messagesContainer');
+
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">💬</div>
+                <div>No messages yet. Start chatting!</div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = messages.map(msg => {
+        const member = members[msg.senderUID];
+        const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        return `
+            <div class="message-group">
+                <div class="msg-avatar">${member?.avatar || '👤'}</div>
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <span class="msg-sender">${member?.name || 'Unknown'}</span>
+                        <span class="msg-time">${time}</span>
+                    </div>
+                    <div class="msg-bubble">
+                        <div class="msg-text">${escapeHtml(msg.text)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+
+    if (!text || !currentUser || !currentChannel) return;
+
+    const member = members[currentUser.uid];
+    db.ref(`channels/${currentChannel.id}/messages`).push({
+        senderUID: currentUser.uid,
+        senderName: currentUser.displayName,
+        text: text,
+        timestamp: new Date().getTime(),
+        avatar: member?.avatar || '👤'
+    }).then(() => {
+        input.value = '';
+        input.style.height = 'auto';
+    }).catch(error => {
+        console.error('Error sending message:', error);
+    });
+}
+
+function renderMembers() {
+    const list = document.getElementById('membersList');
+    const memberArray = Object.values(members);
+
+    list.innerHTML = memberArray.map(member => `
+        <div class="member-item">
+            <div class="member-avatar">${member.avatar || '👤'}</div>
+            <div class="member-info">
+                <div class="member-name">${member.name}</div>
+                <div class="member-status">${member.status || 'offline'}</div>
+            </div>
+            <div class="status-dot ${member.status === 'online' ? '' : 'offline'}"></div>
+        </div>
+    `).join('');
+}
+
+function createChannel() {
+    const name = document.getElementById('channelName').value.trim();
+    const desc = document.getElementById('channelDesc').value.trim();
+    const btn = document.getElementById('createBtn');
+
+    if (!name) {
+        alert('Channel name required!');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+
+    db.ref('channels').push({
+        name: name,
+        description: desc,
+        icon: '📢',
+        createdBy: currentUser.uid,
+        createdAt: new Date().getTime()
+    }).then(() => {
+        document.getElementById('channelName').value = '';
+        document.getElementById('channelDesc').value = '';
+        closeModal('channelModal');
+        btn.disabled = false;
+        btn.textContent = 'Create';
+    }).catch(error => {
+        console.error('Error creating channel:', error);
+        btn.disabled = false;
+        btn.textContent = 'Create';
+    });
+}
+
+// ============================================
+// UI HANDLERS
+// ============================================
+
+function showChannelModal() {
+    document.getElementById('channelModal').classList.add('show');
+}
+
+function showInfoModal() {
+    document.getElementById('infoName').textContent = currentChannel?.name || '-';
+    document.getElementById('infoMembers').textContent = Object.keys(members).length;
+    document.getElementById('infoModal').classList.add('show');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+}
+
+function toggleRightSidebar() {
+    document.getElementById('sidebar-right').classList.toggle('show');
+}
+
+function closeSidebars() {
+    document.getElementById('sidebar').classList.remove('show');
+    document.getElementById('sidebar-right').classList.remove('show');
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 0);
+}
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function setupEventListeners() {
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    document.getElementById('messageInput').addEventListener('input', (e) => {
+        e.target.style.height = 'auto';
+        e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+    });
+}
+
+function setupResponsive() {
+    const isMobile = window.innerWidth <= 1024;
+    document.getElementById('toggleSidebarBtn').style.display = isMobile ? 'block' : 'none';
+    document.getElementById('toggleRightBtn').style.display = isMobile ? 'block' : 'none';
+    window.addEventListener('resize', () => {
+        const isMobile = window.innerWidth <= 1024;
+        document.getElementById('toggleSidebarBtn').style.display = isMobile ? 'block' : 'none';
+        document.getElementById('toggleRightBtn').style.display = isMobile ? 'block' : 'none';
+    });
+}
+
+console.log("✅ App ready!");
+</script>
+
+</body>
+</html>
